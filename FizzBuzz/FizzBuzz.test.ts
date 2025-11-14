@@ -1,14 +1,19 @@
 import { expect } from "chai";
-import { fizzBuzz } from "./FizzBuzz";
+import { Game } from "./FizzBuzz";
 
-describe("FizzBuzz", () => {
+describe("Dividers game", () => {
+  const game = new Game([
+    { name: "fizz", divider: 3 },
+    { name: "buzz", divider: 5 },
+  ]);
+
   it("Should return correct number of fizzes", () => {
-    const result = fizzBuzz(10);
-    expect(result.fizz).to.equal(3);
+    const result = game.fizzBuzz(10);
+    expect(result[0]).to.equal("fizz count is 3");
   });
 
   it("Should return correct number of buzzes", () => {
-    const result = fizzBuzz(10);
-    expect(result.buzz).to.equal(2);
+    const result = game.fizzBuzz(10);
+    expect(result[1]).to.equal("buzz count is 2");
   });
 });
