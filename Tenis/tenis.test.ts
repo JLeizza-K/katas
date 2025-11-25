@@ -1,75 +1,63 @@
 import { expect } from "chai";
-import { Game, Player } from "./tenis.ts";
+import { Game, Player } from "./tenis";
 
-describe("tenis", () => {
-  const player1 = new Player("carlitos");
-  const player2 = new Player("jorge");
-
+describe("tennis", () => {
+  const player1: Player = new Player("jorge");
+  const player2: Player = new Player("carlitos");
   const game = new Game(player1, player2);
 
   it("should return the initial points as 0 and 0", () => {
-    const result = game.status();
+    expect(game.status()).to.equal(
+      "jorge tiene 0 puntos, carlitos tiene 0 puntos",
+    );
+  });
 
-    expect(result).to.equal("carlitos tiene 0 puntos, jorge tiene 0 puntos");
+  it("should return an error when a non-existing player scores", () => {
+    const badCall = () => game.pointWonBy("carlos");
+    expect(badCall).to.throw("Provided name does not match current players");
   });
 
   it("should return the first player with 15 points", () => {
-    game.player1.addPoint();
-    const result = game.status();
-
-    expect(result).to.equal("carlitos tiene 15 puntos, jorge tiene 0 puntos");
-  });
-
-  it("should return both players with 15 points", () => {
-    game.player2.addPoint();
-    const result = game.status();
-
-    expect(result).to.equal("carlitos tiene 15 puntos, jorge tiene 15 puntos");
-  });
-  it("should return both players with 30 points", () => {
-    game.player1.addPoint();
-    game.player2.addPoint();
-    const result = game.status();
-
-    expect(result).to.equal("carlitos tiene 30 puntos, jorge tiene 30 puntos");
-  });
-  it("should return both players with 40 points and in deuce", () => {
-    game.player1.addPoint();
-    game.player2.addPoint();
-    const result = game.status();
-
-    expect(result).to.equal(
-      "carlitos tiene 40 puntos, jorge tiene 40 puntos, estan en deuce",
+    game.pointWonBy("jorge");
+    expect(game.status()).to.equal(
+      "jorge tiene 15 puntos, carlitos tiene 0 puntos",
     );
   });
 
-  it("should return that the second player has advantage", () => {
-    game.player2.addPoint();
-    const result = game.status();
-
-    expect(result).to.equal(
-      "carlitos tiene 40 puntos, jorge tiene advantage puntos",
+  it("should return both players with 15-15", () => {
+    game.pointWonBy("carlitos");
+    expect(game.status()).to.equal(
+      "jorge tiene 15 puntos, carlitos tiene 15 puntos",
     );
   });
 
-  //    it("should go back to deuce", () => {
-  //     game.player1.addPoint();
-  //     const result = game.status();
+  it("should return deuce", () => {
+    game.pointWonBy("carlitos");
+    game.pointWonBy("jorge");
+    game.pointWonBy("carlitos");
+    game.pointWonBy("jorge");
+    expect(game.status()).to.equal(
+      "jorge tiene 40 puntos, carlitos tiene 40 puntos, estan en deuce",
+    );
+  });
 
-  //     expect(result).to.equal("carlitos tiene 40 puntos, jorge tiene 40 puntos, estan en deuce");
-  //   });
+  it("should say player 1 has the advantage", () => {
+    game.pointWonBy("jorge");
+    expect(game.status()).to.equal(
+      "jorge tiene advantage, carlitos tiene 40 puntos",
+    );
+  });
 
-  //    it("should return that the second player won", () => {
-  //     game.player2.addPoint();
-  //     game.player2.addPoint();
-  //     const result = game.status();
+  it("should return that they go back to deuce", () => {
+    game.pointWonBy("carlitos");
+    expect(game.status()).to.equal(
+      "jorge tiene 40 puntos, carlitos tiene 40 puntos, estan en deuce",
+    );
+  });
 
-  //     expect(result).to.equal("jorge gano");
-  //   });
-
-  //   it("should throw an error when points are negative", () => {
-  //     const badCall = () => game.addPoints("carlos");
-
-  //     expect(badCall).to.throw("invalid input");
-  //   });
+  it("should return a winner", () => {
+    game.pointWonBy("carlitos");
+    game.pointWonBy("carlitos");
+    expect(game.status()).to.equal("carlitos gano");
+  });
 });
