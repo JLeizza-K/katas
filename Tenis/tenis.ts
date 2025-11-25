@@ -1,5 +1,11 @@
 const POINTS = ["0", "15", "30", "40"];
 
+type StatusHandler = (
+  player1: Player,
+  player2: Player,
+  winner: string | null,
+) => string | null;
+
 export class Player {
   name: string;
   points: number;
@@ -58,25 +64,54 @@ export class Game {
   }
 }
 export class Evaluate {
-  evaluate(player1: Player, player2: Player, winner: string | null): string {
-    if (winner) return `${winner} gano`;
+  private handlers: StatusHandler[];
 
-    if (this.isDeuce(player1, player2)) {
+  constructor() {
+    this.handlers = [
+      this.handleWinner,
+      this.handleDeuce,
+      this.handleAdvantage,
+      this.handleRegular,
+    ];
+  }
+  evaluate(player1: Player, player2: Player, winner: string | null): string {
+    for (const handler of this.handlers) {
+      const result = handler(player1, player2, winner);
+      if (result) {
+        return result;
+      }
+    }
+  }
+
+  private handleDeuce: StatusHandler = (_, __, winner) => {
+    if (winner) {
+      return `${winner} gano`;
+    }
+    return null;
+  };
+  private handleWinner: StatusHandler = (player1, player2, _) => {
+    if (
+      player1.points === 3 &&
+      player2.points === 3 &&
+      !player1.advantage &&
+      !player2.advantage
+    ) {
       return `${player1.name} tiene 40 puntos, ${player2.name} tiene 40 puntos, estan en deuce`;
     }
-    if (this.isAdvantage(player1, player2)) {
-      return `${player1.name} tiene advantage, ${player2.name} tiene 40 puntos`;
+    return null;
+  };
+  private handleAdvantage: StatusHandler = (player1, player2, _) => {
+    if (player1.points === 3 && player2.points === 3) {
+      if (player1.advantage) {
+        return `${player1.name} tiene advantage, ${player2.name} tiene 40 puntos`;
+      } else if (player2.advantage) {
+        return `${player2.name} tiene advantage, ${player2.name} tiene 40 puntos`;
+      }
     }
-    if (this.isAdvantage(player2, player1)) {
-      return `${player2.name} tiene advantage, ${player1.name} tiene 40 puntos`;
-    }
-    return `${player1.name} tiene ${POINTS[player1.points]} puntos, ${player2.name} tiene ${POINTS[player2.points]} puntos`;
-  }
+    return null;
+  };
 
-  isDeuce(a: Player, b: Player) {
-    return a.points === 3 && b.points === 3 && !a.advantage && !b.advantage;
-  }
-  isAdvantage(a: Player, b: Player) {
-    return a.points === 3 && b.points === 3 && a.advantage && !b.advantage;
-  }
+  private handleRegular: StatusHandler = (player1, player2, _) => {
+    return `${player1.name} tiene ${POINTS[player1.points]} puntos, ${player2.name} tiene ${POINTS[player2.points]} puntos`;
+  };
 }

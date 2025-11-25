@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { Game, Player } from "./tenis";
+import { Game, Player } from "./tenis.ts";
 
 describe("tennis", () => {
   const player1: Player = new Player("jorge");
