@@ -1,11 +1,5 @@
 const POINTS = ["0", "15", "30", "40"];
 
-type StatusHandler = (
-  player1: Player,
-  player2: Player,
-  winner: string | null,
-) => string | null;
-
 export class Player {
   name: string;
   points: number;
@@ -64,7 +58,11 @@ export class Game {
   }
 }
 export class Evaluate {
-  private handlers: StatusHandler[];
+  private handlers: Array<typeof StatusHandler>;
+  handleWinner = WinnerHandler;
+  handleDeuce = DeuceHandler;
+  handleAdvantage = AdvantageHandler;
+  handleRegular = RegularHandler;
 
   constructor() {
     this.handlers = [
@@ -76,42 +74,65 @@ export class Evaluate {
   }
   evaluate(player1: Player, player2: Player, winner: string | null): string {
     for (const handler of this.handlers) {
-      const result = handler(player1, player2, winner);
+      const currentHandler = new handler(player1, player2, winner);
+      const result = currentHandler.handle();
       if (result) {
         return result;
       }
     }
   }
+}
 
-  private handleDeuce: StatusHandler = (_, __, winner) => {
-    if (winner) {
-      return `${winner} gano`;
+class StatusHandler {
+  player1: Player;
+  player2: Player;
+  winner: string | null = null;
+  constructor(player1: Player, player2: Player, winner: string | null) {
+    this.player1 = player1;
+    this.player2 = player2;
+    this.winner = winner;
+  }
+  handle(): string | null {
+    return null;
+  }
+}
+
+class WinnerHandler extends StatusHandler {
+  handle() {
+    if (this.winner) {
+      return `${this.winner} gano`;
     }
     return null;
-  };
-  private handleWinner: StatusHandler = (player1, player2, _) => {
+  }
+}
+class DeuceHandler extends StatusHandler {
+  handle() {
     if (
-      player1.points === 3 &&
-      player2.points === 3 &&
-      !player1.advantage &&
-      !player2.advantage
+      this.player1.points === 3 &&
+      this.player2.points === 3 &&
+      !this.player1.advantage &&
+      !this.player2.advantage
     ) {
-      return `${player1.name} tiene 40 puntos, ${player2.name} tiene 40 puntos, estan en deuce`;
+      return `${this.player1.name} tiene 40 puntos, ${this.player2.name} tiene 40 puntos, estan en deuce`;
     }
     return null;
-  };
-  private handleAdvantage: StatusHandler = (player1, player2, _) => {
-    if (player1.points === 3 && player2.points === 3) {
-      if (player1.advantage) {
-        return `${player1.name} tiene advantage, ${player2.name} tiene 40 puntos`;
-      } else if (player2.advantage) {
-        return `${player2.name} tiene advantage, ${player2.name} tiene 40 puntos`;
+  }
+}
+class AdvantageHandler extends StatusHandler {
+  handle() {
+    if (this.player1.points === 3 && this.player2.points === 3) {
+      if (this.player1.advantage) {
+        return `${this.player1.name} tiene advantage, ${this.player2.name} tiene 40 puntos`;
+      } else if (this.player2.advantage) {
+        return `${this.player2.name} tiene advantage, ${this.player1.name} tiene 40 puntos`;
       }
     }
     return null;
-  };
+  }
+}
 
-  private handleRegular: StatusHandler = (player1, player2, _) => {
-    return `${player1.name} tiene ${POINTS[player1.points]} puntos, ${player2.name} tiene ${POINTS[player2.points]} puntos`;
-  };
+class RegularHandler extends StatusHandler {
+  handle() {
+    return `${this.player1.name} tiene ${POINTS[this.player1.points]} puntos, ${this.player2.name} tiene ${POINTS[this.player2.points]} puntos`;
+  }
 }
