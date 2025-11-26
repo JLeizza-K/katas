@@ -58,25 +58,81 @@ export class Game {
   }
 }
 export class Evaluate {
+  private handlers: Array<typeof StatusHandler>;
+  handleWinner = WinnerHandler;
+  handleDeuce = DeuceHandler;
+  handleAdvantage = AdvantageHandler;
+  handleRegular = RegularHandler;
+
+  constructor() {
+    this.handlers = [
+      this.handleWinner,
+      this.handleDeuce,
+      this.handleAdvantage,
+      this.handleRegular,
+    ];
+  }
   evaluate(player1: Player, player2: Player, winner: string | null): string {
-    if (winner) return `${winner} gano`;
-
-    if (this.isDeuce(player1, player2)) {
-      return `${player1.name} tiene 40 puntos, ${player2.name} tiene 40 puntos, estan en deuce`;
+    for (const handler of this.handlers) {
+      const currentHandler = new handler(player1, player2, winner);
+      const result = currentHandler.handle();
+      if (result) {
+        return result;
+      }
     }
-    if (this.isAdvantage(player1, player2)) {
-      return `${player1.name} tiene advantage, ${player2.name} tiene 40 puntos`;
-    }
-    if (this.isAdvantage(player2, player1)) {
-      return `${player2.name} tiene advantage, ${player1.name} tiene 40 puntos`;
-    }
-    return `${player1.name} tiene ${POINTS[player1.points]} puntos, ${player2.name} tiene ${POINTS[player2.points]} puntos`;
   }
+}
 
-  isDeuce(a: Player, b: Player) {
-    return a.points === 3 && b.points === 3 && !a.advantage && !b.advantage;
+class StatusHandler {
+  player1: Player;
+  player2: Player;
+  winner: string | null = null;
+  constructor(player1: Player, player2: Player, winner: string | null) {
+    this.player1 = player1;
+    this.player2 = player2;
+    this.winner = winner;
   }
-  isAdvantage(a: Player, b: Player) {
-    return a.points === 3 && b.points === 3 && a.advantage && !b.advantage;
+  handle(): string | null {
+    return null;
+  }
+}
+
+class WinnerHandler extends StatusHandler {
+  handle() {
+    if (this.winner) {
+      return `${this.winner} gano`;
+    }
+    return null;
+  }
+}
+class DeuceHandler extends StatusHandler {
+  handle() {
+    if (
+      this.player1.points === 3 &&
+      this.player2.points === 3 &&
+      !this.player1.advantage &&
+      !this.player2.advantage
+    ) {
+      return `${this.player1.name} tiene 40 puntos, ${this.player2.name} tiene 40 puntos, estan en deuce`;
+    }
+    return null;
+  }
+}
+class AdvantageHandler extends StatusHandler {
+  handle() {
+    if (this.player1.points === 3 && this.player2.points === 3) {
+      if (this.player1.advantage) {
+        return `${this.player1.name} tiene advantage, ${this.player2.name} tiene 40 puntos`;
+      } else if (this.player2.advantage) {
+        return `${this.player2.name} tiene advantage, ${this.player1.name} tiene 40 puntos`;
+      }
+    }
+    return null;
+  }
+}
+
+class RegularHandler extends StatusHandler {
+  handle() {
+    return `${this.player1.name} tiene ${POINTS[this.player1.points]} puntos, ${this.player2.name} tiene ${POINTS[this.player2.points]} puntos`;
   }
 }
